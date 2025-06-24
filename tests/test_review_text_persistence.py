@@ -1,5 +1,3 @@
-# tests/test_review_text_persistence.py
-
 import time
 import pytest
 from uuid import uuid4
@@ -7,14 +5,12 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 
 from pages.login_page import LoginPage
-from pages.age_verification_page import AgeVerificationPage
 from pages.shop_page import ShopPage
 from pages.product_page import ProductPage
 from pages.checkout_page import CheckoutPage
-from pages.checkout_cleaner import CheckoutCleaner
 
 
-@pytest.mark.order(5)
+
 @pytest.mark.xfail(reason="Review comment not persisted — known issue", strict=True)
 @pytest.mark.usefixtures('driver', 'config')
 def test_review_text_persistence(driver, config):
@@ -25,15 +21,13 @@ def test_review_text_persistence(driver, config):
 
     wait = WebDriverWait(driver, 20)
 
-    # Step 1: Login and pass age check
+    # Step 1: Log in and pass age gate
     LoginPage(driver).login(config["email"], config["password"])
-    age = AgeVerificationPage(driver)
-    age.open_shop()
-    age.enter_dob("08-08-2000")
-    age.confirm_age()
+    shop_page = ShopPage(driver)
+    shop_page.open_store()  # Navigate to store and wait for page/modal
+    shop_page.handle_age_verification("08-08-2000")  # Enter DOB and confirm
 
     # Step 2: Get product ID
-    shop_page = ShopPage(driver)
     product_element = shop_page.get_first_product_card()
     input_elem = product_element.find_element(By.CSS_SELECTOR, "input.quantity")
     product_id = input_elem.get_attribute("name").split("_", 1)[1]
@@ -66,4 +60,4 @@ def test_review_text_persistence(driver, config):
     assert any(comment in r for r in reviews), "Review comment text not found after refresh!"
 
     # Step 7: Clean up
-    CheckoutCleaner(driver).clear_cart()
+    checkout.clear_cart()

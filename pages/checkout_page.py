@@ -1,5 +1,3 @@
-# pages/checkout_page.py
-
 import time  # For adding delays during UI interactions
 from selenium.webdriver.common.by import By  # Used to locate elements
 from selenium.webdriver.support.ui import WebDriverWait  # Waits for conditions
@@ -28,6 +26,9 @@ class CheckoutPage:
     _CVV = (By.NAME, "cvv")  # CVV code input
     _CONTINUE = (By.XPATH, "//button[contains(text(),'Buy now')]")  # Final purchase button
 
+    # — locators for cart cleanup —
+    _REMOVE_LINKS = (By.CSS_SELECTOR, "a.remove-icon")  # Fix: <a> tag, not button
+    _CART_EMPTY_INDICATOR = (By.CLASS_NAME, "cart-empty-text")  # Optional final check
 
     def __init__(self, driver, timeout: int = 15):
         self.driver = driver  # Store reference to Selenium driver
@@ -111,17 +112,28 @@ class CheckoutPage:
         self.wait.until(EC.element_to_be_clickable(self._CONTINUE)).click()
 
     def clear_cart(self):
-        """Remove all items from the cart by clicking their × icons."""
-        self.open_checkout()  # Ensure we are on checkout page
+        """
+        Clicks all '×' icons in the checkout to remove items from the cart.
+        """
+        self.driver.get(self._CHECKOUT_URL)
+        self.wait.until(EC.presence_of_element_located(self._REMOVE_LINKS))
+        time.sleep(2)  # Let cart render fully
 
         while True:
-            try:
-                remove_buttons = self._driver.find_elements(By.XPATH, "//button[contains(text(),'×')]")  # Find all remove buttons
-                if not remove_buttons:
-                    break  # Nothing left to remove
+            remove_buttons = self.driver.find_elements(*self._REMOVE_LINKS)
+            x_buttons = [btn for btn in remove_buttons if btn.text.strip() == "×"]
 
-                for btn in remove_buttons:  # For each remove button
-                    self.wait.until(EC.element_to_be_clickable(btn)).click()  # Wait then click
-                    time.sleep(0.5)  # Allow UI to update
-            except Exception:
-                break  # If interaction fails, stop
+            if not x_buttons:
+                print(" Cart is empty.")
+                break
+
+            for button in x_buttons:
+                try:
+                    self.wait.until(EC.element_to_be_clickable(button))
+                    self.driver.execute_script("arguments[0].scrollIntoView(true);", button)
+                    button.click()
+                    time.sleep(2)
+                    break
+                except Exception as e:
+                    print(f" Failed to click '×': {e}")
+                    continue

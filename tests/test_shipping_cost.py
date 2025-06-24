@@ -1,5 +1,3 @@
-# tests/test_shipping_cost.py
-
 import math  # Used to calculate required quantity to exceed €20
 import time  # Used for sleep pauses between actions
 import pytest  # PyTest framework and decorators
@@ -8,16 +6,12 @@ from selenium.webdriver.support import expected_conditions as EC  # For Selenium
 
 # Import page modules
 from pages.login_page import LoginPage
-from pages.age_verification_page import AgeVerificationPage
 from pages.shop_page import ShopPage
 from pages.checkout_page import CheckoutPage
-from pages.checkout_cleaner import CheckoutCleaner  # Used for cleaning the cart at the end
 
 
-# Mark the test with execution order, fixtures, and expected failure due to known bug
-@pytest.mark.order(2)
 @pytest.mark.usefixtures("driver", "config")
-@pytest.mark.xfail(reason="Shipping does not update to €5 when subtotal drops below €20")
+#@pytest.mark.xfail(reason="Shipping does not update to €5 when subtotal drops below €20")
 def test_shipping_cost_threshold(driver, config):
     """
     Steps:
@@ -30,25 +24,22 @@ def test_shipping_cost_threshold(driver, config):
 
     wait = WebDriverWait(driver, 20)  # General wait object
 
-    # Step 1: Perform login
+    # Step 1: Log in and pass age gate
     LoginPage(driver).login(config["email"], config["password"])
-    time.sleep(2)  # Small pause for the UI to settle
 
     # Step 2: Complete age verification flow
-    age = AgeVerificationPage(driver)
-    age.open_shop()  # Click "SHOP" to trigger age modal
-    age.enter_dob("08-08-2000")  # Enter valid date of birth
-    age.confirm_age()  # Click confirm to pass the gate
+    shop_page = ShopPage(driver)
+    shop_page.open_store()  # Navigate to store and wait for page/modal
+    shop_page.handle_age_verification("08-08-2000")  # Enter DOB and confirm
     wait.until(EC.url_contains("/store"))  # Wait for URL to confirm we're on the store page
 
     # Step 3: Calculate how many items are needed to exceed €20
-    shop = ShopPage(driver)
-    shop.open_store()  # Navigate to the store
-    unit_price = shop.get_first_product_price()  # Get price of first visible item
+    shop_page.open_store()  # Navigate to the store
+    unit_price = shop_page.get_first_product_price()  # Get price of first visible item
     qty = math.floor(20 / unit_price) + 1  # Compute minimum quantity to exceed €20
 
     # Step 4: Add calculated quantity of product to cart
-    shop.add_first_product_to_cart(qty)  # Add that quantity to the cart
+    shop_page.add_first_product_to_cart(qty)  # Add that quantity to the cart
     time.sleep(2)  # Allow time for cart update
 
     # Step 5: Assert shipping cost is free
@@ -64,8 +55,7 @@ def test_shipping_cost_threshold(driver, config):
 
     # Step 7: Check that shipping cost is now €5
     shipping = checkout.read_shipping_cost()
-    assert "5" in shipping or "5.00" in shipping, f"Expected €5 shipping, got: {shipping}"  # 🔴 This assert is known to fail
+    assert "5" in shipping or "5.00" in shipping, f"Expected €5 shipping, got: {shipping}"  # This assert is known to fail
 
     # Step 8: Cleanup - remove all items from cart
-    cleaner = CheckoutCleaner(driver)
-    cleaner.clear_all_items()
+    checkout.clear_cart()

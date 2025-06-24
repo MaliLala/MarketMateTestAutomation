@@ -1,7 +1,6 @@
 import pytest
 from pages.login_page import LoginPage
 
-@pytest.mark.order(0)
 @pytest.mark.usefixtures("driver", "config")
 def test_login(driver, config):
     """
