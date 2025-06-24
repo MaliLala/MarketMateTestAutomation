@@ -128,7 +128,7 @@ class ShopPage:
         """Add the first product on the page to the cart with specified quantity."""
         card = self.get_first_product_card()
 
-        qty_input = card.find_element(By.CSS_SELECTOR, "input.quantity")
+        qty_input = card.find_element(By.XPATH, ".//input[contains(@class, 'quantity')]")
         add_btn = card.find_element(By.CSS_SELECTOR, "button.btn-cart")
 
         self._driver.execute_script("arguments[0].scrollIntoView(true);", qty_input)

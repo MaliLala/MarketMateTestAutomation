@@ -11,10 +11,10 @@ class CheckoutPage:
     _CHECKOUT_URL = "https://grocerymate.masterschool.com/checkout"  # URL for the checkout page
     _SHIPPING_COST = (
         By.XPATH,
-        "//h5[normalize-space(.)='Shipment:']/following-sibling::h5"
+        ".//h5[normalize-space(.)='Shipment:']/following-sibling::h5"
     )  # Finds the element with shipping cost
-    _PLUS_BUTTON = (By.CSS_SELECTOR, "button.plus")  # Locator for increasing quantity
-    _MINUS_BUTTON = (By.CSS_SELECTOR, "button.minus")  # Locator for decreasing quantity
+    _PLUS_BUTTON = (By.XPATH, "//button[contains(@class, 'plus')]"), "button.plus"  # Locator for increasing quantity
+    _MINUS_BUTTON = (By.XPATH, "//button[contains(@class, 'minus')]") # Locator for decreasing quantity
 
     # — updated locators for the “buy” flow —
     _STREET = (By.NAME, "street")  # Input field for street

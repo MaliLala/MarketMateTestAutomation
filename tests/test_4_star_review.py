@@ -30,7 +30,7 @@ def test_4_star_review_submission(driver, config):
 
     # Step 3: Select first product and extract product ID
     product_element = shop_page.get_first_product_card()
-    input_elem = product_element.find_element(By.CSS_SELECTOR, "input.quantity")
+    input_elem = product_element.find_element(By.XPATH, ".//input[contains(@class, 'quantity')]")
     product_id = input_elem.get_attribute("name").split("_", 1)[1]
 
     # Step 4: Add product to cart and purchase

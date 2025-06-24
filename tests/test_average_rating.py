@@ -35,7 +35,7 @@ def test_average_rating_update(driver, config):
 
     # Step 4: Navigate to product
     product_element = shop_page.get_first_product_card()
-    input_elem = product_element.find_element(By.CSS_SELECTOR, "input.quantity")
+    input_elem = product_element.find_element(By.XPATH, ".//input[contains(@class, 'quantity')]")
     product_id = input_elem.get_attribute("name").split("_", 1)[1]
 
     shop_page.open_store()
