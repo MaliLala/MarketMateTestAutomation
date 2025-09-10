@@ -32,7 +32,7 @@ Playwright notes (planned)
 
 Contact
 - GitHub: https://github.com/MaliLala
-- LinkedIn: https://www.linkedin.com/in/YOUR-LINKEDIN-PROFILE
+- LinkedIn: https://www.linkedin.com/in/goran-csonkity
 EOF
 
 git add README.md
