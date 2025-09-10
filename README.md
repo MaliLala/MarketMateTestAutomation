@@ -34,8 +34,3 @@ Contact
 - GitHub: https://github.com/MaliLala
 - LinkedIn: https://www.linkedin.com/in/goran-csonkity
 EOF
-
-git add README.md
-git commit -m "docs: concise README for MarketMateTestAutomation"
-git push origin main
-# ----------------------------------------------------------------------------------
