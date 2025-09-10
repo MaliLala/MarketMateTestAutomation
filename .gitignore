@@ -19,3 +19,4 @@
 19 screenshots/
 20 logs/
 21 traces/
+.venv/
