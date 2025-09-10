@@ -1,0 +1,21 @@
+1  # Python
+2  __pycache__/
+3  *.py[cod]
+4  *.pyo
+5  *.pyd
+6  .pytest_cache/
+7
+8  # Environments and local config
+9  .env
+10 .venv/
+11 venv/
+12
+13 # IDEs and editors
+14 .idea/
+15 .vscode/
+16
+17 # Reports and artifacts
+18 reports/
+19 screenshots/
+20 logs/
+21 traces/
