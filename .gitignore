@@ -20,3 +20,19 @@
 20 logs/
 21 traces/
 .venv/
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Pytest / Playwright
+.pytest_cache/
+playwright-report/
+report.html
+
+# Envs & editors
+venv/
+.venv/
+.idea/
+.vscode/
+.DS_Store
