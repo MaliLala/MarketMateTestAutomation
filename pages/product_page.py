@@ -125,27 +125,34 @@ class ProductPage:
         return result
 
     def _parse_average_rating_from_stars(self, stars) -> float:
-        """Parse average rating from star WebElements list."""
+        """Parse average rating from star WebElements list (handles partial fills correctly)."""
         full_stars = 0
         partial_fraction = 0.0
 
         for star in stars:
-            class_attr = star.get_attribute("class")
+            class_attr = star.get_attribute("class") or ""
 
+            # Count fully filled stars
             if "full" in class_attr:
                 full_stars += 1
-            elif "partial" in class_attr:
+                continue
+
+            # Handle partially filled star (width: 95%)
+            if "partial" in class_attr or "half" in class_attr:
                 try:
                     filled_span = star.find_element(By.CSS_SELECTOR, ".filled")
-                    style_attr = filled_span.get_attribute("style")
-                    percent_str = style_attr.split("width:")[1].split("%")[0].strip()
-                    percent = float(percent_str)
-                    partial_fraction = percent / 100
+                    style_attr = filled_span.get_attribute("style") or ""
+                    match = re.search(r"width:\s*(\d+(?:\.\d+)?)%", style_attr)
+                    if match:
+                        percent = float(match.group(1))
+                        # Convert percent fill to fractional star (e.g., 95% → 0.95)
+                        partial_fraction = percent / 100
                 except Exception:
                     partial_fraction = 0.0
                 break  # Only one partial star expected
 
-        return round(full_stars + partial_fraction, 1)
+        # Total = full stars + fraction of the next one
+        return round(full_stars + partial_fraction, 2)
 
     def get_average_rating(self) -> float:
         """Get average rating displayed on the product page as a float."""
