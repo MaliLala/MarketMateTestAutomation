@@ -1,54 +1,45 @@
+import os
 import re
 import pytest
-from playwright.sync_api import TimeoutError as PWTimeout
+from pages.login_page import LoginPage
+from pages.shop_page import ShopPage
+from pages.checkout_page import CheckoutPage
 
 pytestmark = pytest.mark.e2e
 
-BASE = "https://grocerymate.masterschool.com"  # no trailing slash
+BASE = "https://grocerymate.masterschool.com"
+EMAIL = os.getenv("USER_EMAIL")
+PASSWORD = os.getenv("USER_PASSWORD")
 
-def _pass_age_modal(page):
-    """Best-effort: fill DOB 'DD-MM-YYYY' and click Confirm if shown."""
-    try:
-        dob = page.get_by_placeholder("DD-MM-YYYY")
-        if dob.count() and dob.first.is_visible():
-            dob.first.fill("01-01-1990", timeout=2000)
-            page.get_by_role("button", name=re.compile(r"confirm", re.I)).click(timeout=2000)
-            page.wait_for_timeout(300)
-    except Exception:
-        pass
-
-def test_add_to_cart_minimal(page):
+@pytest.mark.skipif(not EMAIL or not PASSWORD, reason="USER_EMAIL/USER_PASSWORD not set in .env")
+def test_add_to_cart_then_open_cart(page):
     """
-    Minimal parity with Selenium Shop flow:
-    - open /store
-    - scroll to top
-    - pass DOB modal
-    - click the first 'Add to Cart' button
+    GIVEN a logged-in user
+    WHEN they add the first product on /store and click the cart icon
+    THEN the checkout/cart view opens and shows at least one item
     """
-    # open store
-    page.goto(f"{BASE}/store", wait_until="domcontentloaded")
 
-    # ensure we start at the top (your earlier run showed the footer)
-    page.evaluate("window.scrollTo(0, 0)")
-    page.wait_for_timeout(200)
+    # 1) Login (same as Selenium’s LoginPage usage)
+    page.goto(f"{BASE}/auth", wait_until="domcontentloaded")
+    LoginPage(page).login(EMAIL, PASSWORD)
 
-    _pass_age_modal(page)
+    # 2) Go to /store and pass age modal (ShopPage handles this)
+    shop = ShopPage(page).open()
 
-    # wait a bit for grid to hydrate; then look for the exact class you showed
-    for _ in range(4):
-        try:
-            page.wait_for_selector("button.btn-cart", state="visible", timeout=1500)
-            break
-        except PWTimeout:
-            # nudge lazy content
-            page.evaluate("window.scrollBy(0, Math.floor(window.innerHeight*0.75))")
-            page.wait_for_timeout(250)
+    # 3) Add first product from the grid
+    result = shop.add_first_product()
 
-    # click the first Add to Cart we can see
-    add_btn = page.locator("button.btn-cart").first
-    assert add_btn.count() > 0 and add_btn.is_visible(), "Couldn't find a visible 'Add to Cart' button"
-    add_btn.scroll_into_view_if_needed()
-    add_btn.click()
+    # 4) Click the cart icon in the header (don’t hard-jump to /checkout)
+    # Try direct link first, then fall back to a11y name that contains "cart"
+    banner = page.get_by_role("banner")
+    cart_link = banner.locator('a[href="/checkout"]').first
+    if cart_link.count() == 0:
+        cart_link = banner.get_by_role("link", name=re.compile(r"cart|shopping", re.I)).first
 
-    # sanity: page is still interactive
-    assert page.url.startswith(f"{BASE}/store"), f"Unexpected redirect after add: {page.url}"
+    assert cart_link.count() > 0 and cart_link.is_visible(), "Cart icon/link not found in header"
+    cart_link.click()
+
+    # 5) Assert we’re on the cart/checkout and there’s at least one line item
+    checkout = CheckoutPage(page)
+    assert checkout.is_displayed(), "Checkout/cart page did not open after clicking cart icon"
+    assert checkout.has_items(), "Expected at least one item in the cart"
