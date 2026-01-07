@@ -1,8 +1,3 @@
-
-
-cd ~/Portfolio-projects/MarketMateTestAutomation
-
-cat > README.md << 'EOF'
 # MarketMate Test Automation
 
 Automated end-to-end test suite for the MarketMate webshop (Selenium + pytest).  
@@ -34,4 +29,3 @@ Playwright notes (planned)
 Contact
 - GitHub: https://github.com/MaliLala
 - LinkedIn: https://www.linkedin.com/in/goran-csonkity
-EOF
